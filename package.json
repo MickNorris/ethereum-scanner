@@ -1,0 +1,23 @@
+{
+  "name": "etherscan-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node-dev main.ts",
+    "build": "tsc main.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/cheerio": "^0.22.22",
+    "cheerio": "^1.0.0-rc.3",
+    "discord.js": "^12.3.1",
+    "ethplorer-js": "0.0.7",
+    "got": "^11.7.0",
+    "hooman": "^1.2.6",
+    "node-etherscan-api": "^0.1.3",
+    "request": "^2.88.2"
+  }
+}
