@@ -34,12 +34,16 @@ async function log(message: string, err?: boolean | null) {
 // load coins.txt data into coins global var
 async function loadCoins() {
 
+    /*
     try {
         tokens = fs.readFileSync("tokens.txt", "utf8");
     } catch(err) {
         tokens = "";
         log(err,true);
     }
+    */
+
+    return true;
 
 }
 
