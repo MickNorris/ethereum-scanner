@@ -80,7 +80,6 @@ async function filterTokens(tokenList: string[]) {
         await ethplorer.getTokenInfo(token)
         .then((data:any) => {
 
-            log(token);
             // ignore coins that don't meet filter
             if (data.transfersCount > TRANSFERS_FILTER)
                 return;
