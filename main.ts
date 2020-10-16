@@ -1,5 +1,5 @@
 import Config from './config';
-import Etherscan from 'node-etherscan-api';
+// import Etherscan from 'node-etherscan-api';
 import { Ethplorer } from 'ethplorer-js';
 import * as cheerio from 'cheerio';
 import * as fs from 'fs';
@@ -8,7 +8,7 @@ const Discord = require('discord.js');
 const discord = new Discord.Client();
 
 // initialize apis
-const etherscan = new Etherscan(Config.ETHERSCAN_KEY); 
+// const etherscan = new Etherscan(Config.ETHERSCAN_KEY); 
 const ethplorer = new Ethplorer(Config.ETHPLORER_KEY);
 
 // min amount of transfers to be considered
