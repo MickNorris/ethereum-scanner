@@ -70,14 +70,15 @@ function log(message, err) {
 function loadCoins() {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
+            /*
             try {
                 tokens = fs.readFileSync("tokens.txt", "utf8");
-            }
-            catch (err) {
+            } catch(err) {
                 tokens = "";
-                log(err, true);
+                log(err,true);
             }
-            return [2 /*return*/];
+            */
+            return [2 /*return*/, true];
         });
     });
 }
@@ -96,39 +97,31 @@ function saveToken(token) {
 // fitler our tokens we don't care about
 function filterTokens(tokenList) {
     return __awaiter(this, void 0, void 0, function () {
-        var filtered, _loop_1, _i, tokenList_1, token;
+        var filtered, _i, tokenList_1, token;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     filtered = [];
-                    _loop_1 = function (token) {
-                        return __generator(this, function (_a) {
-                            switch (_a.label) {
-                                case 0: return [4 /*yield*/, ethplorer.getTokenInfo(token)
-                                        .then(function (data) {
-                                        log(token);
-                                        // ignore coins that don't meet filter
-                                        if (data.transfersCount > TRANSFERS_FILTER)
-                                            return;
-                                        // construct message
-                                        var message = data.name +
-                                            "\nTransfers: " + data.transfersCount +
-                                            "\nHolders: " + data.holdersCount +
-                                            "\n https://etherscan.io/token/" + data.address;
-                                        log("```" + message + "```");
-                                    })];
-                                case 1:
-                                    _a.sent();
-                                    return [2 /*return*/];
-                            }
-                        });
-                    };
                     _i = 0, tokenList_1 = tokenList;
                     _a.label = 1;
                 case 1:
                     if (!(_i < tokenList_1.length)) return [3 /*break*/, 4];
                     token = tokenList_1[_i];
-                    return [5 /*yield**/, _loop_1(token)];
+                    return [4 /*yield*/, ethplorer.getTokenInfo(token)
+                            .then(function (data) {
+                            // ignore coins that don't meet filter
+                            if (data.transfersCount > TRANSFERS_FILTER)
+                                return;
+                            // construct message
+                            var message = data.name +
+                                "\nTransfers: " + data.transfersCount +
+                                "\nHolders: " + data.holdersCount +
+                                "\n https://etherscan.io/token/" + data.address;
+                            log("```" + message + "```");
+                        })["catch"](function (err) {
+                            log(err, true);
+                            return;
+                        })];
                 case 2:
                     _a.sent();
                     _a.label = 3;
@@ -199,5 +192,5 @@ discord.on("ready", function () {
         // first run
         if (loadCoins())
             scrapeEtherscan();
-    }, 15000);
+    }, 20000);
 });
