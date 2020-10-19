@@ -104,7 +104,7 @@ async function filterTokens(tokenList: string[]) {
             const message = "```" + data.name + 
                           "\nTransfers: " + data.transfersCount + 
                           "\nHolders: " + data.holdersCount + 
-                          "\nTotal Supply" + data.totalSupply + 
+                          "\nTotal Supply: " + data.totalSupply + 
                           "```\nhttps://etherscan.io/token/" + data.address;
 
             log(message);
