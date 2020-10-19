@@ -101,8 +101,8 @@ async function filterTokens(tokenList: string[]) {
             // console.log(recent);
 
             // construct message
-            const message = data.name + 
-                          "```\nTransfers: " + data.transfersCount + 
+            const message = "```" + data.name + 
+                          "\nTransfers: " + data.transfersCount + 
                           "\nHolders: " + data.holdersCount + 
                           "\nTotal Supply" + data.totalSupply + 
                           "```\nhttps://etherscan.io/token/" + data.address;
@@ -131,6 +131,7 @@ async function scrapeEtherscan() {
         log("scrapeEtherscan() " + err, true);
         return;
     }
+
 
     // load html with cheerio
     const $ = await cheerio.load(html);

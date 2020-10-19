@@ -47,6 +47,8 @@ var discord = new Discord.Client();
 // initialize apis
 // const etherscan = new Etherscan(Config.ETHERSCAN_KEY); 
 var ethplorer = new ethplorer_js_1.Ethplorer(config_1["default"].ETHPLORER_KEY);
+// list of recently discovered tokens
+var recent = [];
 // min amount of transfers to be considered
 var TRANSFERS_FILTER = 100;
 // var to hold tokens.txt contents
@@ -94,36 +96,60 @@ function saveToken(token) {
         });
     }
 }
+// add to array and keep it at 10 elements
+function cycleArray(address) {
+    recent.unshift(address);
+    recent = recent.slice(0, 20);
+}
 // fitler our tokens we don't care about
 function filterTokens(tokenList) {
     return __awaiter(this, void 0, void 0, function () {
-        var filtered, _i, tokenList_1, token;
+        var _loop_1, _i, tokenList_1, token, state_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    filtered = [];
+                    _loop_1 = function (token) {
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    // don't list addresses that were recently listed
+                                    if (recent.indexOf(token) !== -1)
+                                        return [2 /*return*/, { value: void 0 }];
+                                    return [4 /*yield*/, ethplorer.getTokenInfo(token)
+                                            .then(function (data) {
+                                            // ignore coins that don't meet filter
+                                            if (data.transfersCount > TRANSFERS_FILTER)
+                                                return;
+                                            // add to list
+                                            cycleArray(token);
+                                            // console.log(recent);
+                                            // construct message
+                                            var message = data.name +
+                                                "```\nTransfers: " + data.transfersCount +
+                                                "\nHolders: " + data.holdersCount +
+                                                "\nTotal Supply" + data.totalSupply +
+                                                "```\nhttps://etherscan.io/token/" + data.address;
+                                            log(message);
+                                        })["catch"](function (err) {
+                                            // log("filterTokens(): " + err);            
+                                            return;
+                                        })];
+                                case 1:
+                                    _a.sent();
+                                    return [2 /*return*/];
+                            }
+                        });
+                    };
                     _i = 0, tokenList_1 = tokenList;
                     _a.label = 1;
                 case 1:
                     if (!(_i < tokenList_1.length)) return [3 /*break*/, 4];
                     token = tokenList_1[_i];
-                    return [4 /*yield*/, ethplorer.getTokenInfo(token)
-                            .then(function (data) {
-                            // ignore coins that don't meet filter
-                            if (data.transfersCount > TRANSFERS_FILTER)
-                                return;
-                            // construct message
-                            var message = data.name +
-                                "\nTransfers: " + data.transfersCount +
-                                "\nHolders: " + data.holdersCount +
-                                "\n https://etherscan.io/token/" + data.address;
-                            log("```" + message + "```");
-                        })["catch"](function (err) {
-                            log(err, true);
-                            return;
-                        })];
+                    return [5 /*yield**/, _loop_1(token)];
                 case 2:
-                    _a.sent();
+                    state_1 = _a.sent();
+                    if (typeof state_1 === "object")
+                        return [2 /*return*/, state_1.value];
                     _a.label = 3;
                 case 3:
                     _i++;
@@ -152,7 +178,7 @@ function scrapeEtherscan() {
                     return [3 /*break*/, 4];
                 case 3:
                     err_1 = _a.sent();
-                    log(err_1, true);
+                    log("scrapeEtherscan() " + err_1, true);
                     return [2 /*return*/];
                 case 4: return [4 /*yield*/, cheerio.load(html)];
                 case 5:
