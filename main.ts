@@ -82,8 +82,6 @@ function cycleArray (address: string) {
 // fitler our tokens we don't care about
 async function filterTokens(tokenList: string[]) {
 
-    let filtered: object[] = [];
-
     // go through tokens and get info
     for (const token of tokenList) {
 
@@ -100,15 +98,16 @@ async function filterTokens(tokenList: string[]) {
 
             // add to list
             cycleArray(token);
-            console.log(recent);
+            // console.log(recent);
 
             // construct message
             const message = data.name + 
-                          "\nTransfers: " + data.transfersCount + 
+                          "```\nTransfers: " + data.transfersCount + 
                           "\nHolders: " + data.holdersCount + 
-                          "\n https://etherscan.io/token/" + data.address;
+                          "\nTotal Supply" + data.totalSupply + 
+                          "```\nhttps://etherscan.io/token/" + data.address;
 
-            log("```" + message + "```");
+            log(message);
         })
         .catch((err:string) => {
             // log("filterTokens(): " + err);            
