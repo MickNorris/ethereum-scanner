@@ -55,9 +55,9 @@ interface TokenData {
     name: string,
     totalSupply: string,
     transfersCount: number,
-    holdersCount: number
+    holdersCount: number,
+    decimals: number
 }
-
 
 // save token to tokens.txt if it's new
 function saveToken(token: TokenData) {
@@ -98,16 +98,20 @@ async function filterTokens(tokenList: string[]) {
 
             // add to list
             cycleArray(token);
-            // console.log(recent);
+
+            // divide total supply by decimals and add commas
+            const supply:string = Number(parseInt(data.totalSupply) / 10**data.decimals)
+            .toLocaleString('en');
 
             // construct message
             const message = "```" + data.name + 
                           "\nTransfers: " + data.transfersCount + 
                           "\nHolders: " + data.holdersCount + 
-                          "\nTotal Supply: " + data.totalSupply + 
+                          "\nTotal Supply: " + supply + 
                           "```\nhttps://etherscan.io/token/" + data.address;
 
             log(message);
+
         })
         .catch((err:string) => {
             // log("filterTokens(): " + err);            
