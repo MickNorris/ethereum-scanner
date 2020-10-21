@@ -1,6 +1,7 @@
 import Config from './config';
-// import Etherscan from 'node-etherscan-api';
+import Etherscan from 'node-etherscan-api';
 import { Ethplorer } from 'ethplorer-js';
+import { ChainId, Token, Fetcher, WETH, Route } from '@uniswap/sdk';
 import * as cheerio from 'cheerio';
 import * as fs from 'fs';
 const hooman = require('hooman');
@@ -8,7 +9,7 @@ const Discord = require('discord.js');
 const discord = new Discord.Client();
 
 // initialize apis
-// const etherscan = new Etherscan(Config.ETHERSCAN_KEY); 
+const etherscan = new Etherscan(Config.ETHERSCAN_KEY); 
 const ethplorer = new Ethplorer(Config.ETHPLORER_KEY);
 
 // list of recently discovered tokens
@@ -79,9 +80,68 @@ function cycleArray (address: string) {
     recent = recent.slice(0,20);
 }
 
-// fitler our tokens we don't care about
+// wait function
+async function wait(milliseconds: number) {
+    await new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+
+// does the given token have an ETH pair
+async function hasEthPair(token: string) {
+
+    // if error in fetching pair: no eth pair
+    try {
+        const uniswapToken = new Token(ChainId.MAINNET, token, 18);
+        await Fetcher.fetchPairData(uniswapToken, WETH[uniswapToken.chainId])
+    } catch (e: any) {
+        return false;
+    }
+
+    return true;
+
+}
+
+// fitler out transactions we don't care about
+async function filterTransactions(transactionList: string[]) {
+
+    // go through transactions
+    for (const transaction of transactionList) {
+
+        await wait(2000);
+
+        etherscan.getTransactionByHash(transaction)
+        .then(async (data) => {
+            /*
+            const ethPair1 = await hasEthPair(data.from);
+            const ethPair2 = await hasEthPair(data.from);
+            console.log(ethPair1 + ": " + data.from);
+            console.log(ethPair2 + ": " + data.to);
+            */
+
+            const receipt = await etherscan.getTransactionReceipt(transaction);
+
+            console.log(receipt);
+
+        });
+
+        /*
+        await ethplorer.getTxInfo(transaction)
+        .then(async (data:any) => {
+            console.log(data);
+        });
+        */
+    }
+
+}
+
+// fitler out tokens we don't care about
 async function filterTokens(tokenList: string[]) {
 
+    // ignore possible errors
+    if (tokenList.length == 0)
+        return;
+
+    
     // go through tokens and get info
     for (const token of tokenList) {
 
@@ -89,12 +149,17 @@ async function filterTokens(tokenList: string[]) {
         if (recent.indexOf(token) !== -1)
             return;
 
+        await wait(1000);
+
         await ethplorer.getTokenInfo(token)
-        .then((data:any) => {
+        .then(async (data:any) => {
 
             // ignore coins that don't meet filter
             if (data.transfersCount > TRANSFERS_FILTER)
                 return;
+
+            // does token have an ETH pair?
+            const ethPair = await hasEthPair(token);
 
             // add to list
             cycleArray(token);
@@ -108,6 +173,7 @@ async function filterTokens(tokenList: string[]) {
                           "\nTransfers: " + data.transfersCount + 
                           "\nHolders: " + data.holdersCount + 
                           "\nTotal Supply: " + supply + 
+                          "\nEth Pair: " + ethPair + 
                           "```\nhttps://etherscan.io/token/" + data.address;
 
             log(message);
@@ -141,24 +207,29 @@ async function scrapeEtherscan() {
     const $ = await cheerio.load(html);
 
     let newTokens: string[] = [];
+    let newTransactions: string[] = [];
 
     // go through all table items
     await $('.table-hover tbody tr').each(async (i, elem) => {
 
         // extract token addr
-        let href = $(elem.childNodes[8].childNodes[0]).attr("href");
-        let tokenAddress = href?.substring(href?.lastIndexOf("/") + 1);
-        // console.log(tokenAddress);
+        const token = $(elem.childNodes[8].childNodes[0]).attr("href");
+        const transactionAddress = $(elem.childNodes[1].childNodes[0]).text();
+        const tokenAddress = token?.substring(token?.lastIndexOf("/") + 1);
 
         // add tokens to list
         if (tokenAddress)
             newTokens.push(tokenAddress);
+        
+        // add transactions to list
+        if (transactionAddress)
+            newTransactions.push(transactionAddress);
 
     });
 
-    // send tokens to filter
-    if (newTokens.length > 0)
-        filterTokens(newTokens);
+    // send tokens & transacitons to filter
+    filterTokens(newTokens);
+    // filterTransactions(newTransactions);
 }
 
 
