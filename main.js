@@ -37,15 +37,16 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var config_1 = require("./config");
-// import Etherscan from 'node-etherscan-api';
 var ethplorer_js_1 = require("ethplorer-js");
+var sdk_1 = require("@uniswap/sdk");
 var cheerio = require("cheerio");
 var fs = require("fs");
 var hooman = require('hooman');
 var Discord = require('discord.js');
+var Etherscan = require('node-etherscan-api');
 var discord = new Discord.Client();
 // initialize apis
-// const etherscan = new Etherscan(Config.ETHERSCAN_KEY); 
+var etherscan = new Etherscan(config_1["default"].ETHERSCAN_KEY);
 var ethplorer = new ethplorer_js_1.Ethplorer(config_1["default"].ETHPLORER_KEY);
 // list of recently discovered tokens
 var recent = [];
@@ -101,40 +102,140 @@ function cycleArray(address) {
     recent.unshift(address);
     recent = recent.slice(0, 20);
 }
-// fitler our tokens we don't care about
-function filterTokens(tokenList) {
+// wait function
+function wait(milliseconds) {
     return __awaiter(this, void 0, void 0, function () {
-        var _loop_1, _i, tokenList_1, token, state_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, milliseconds); })];
+                case 1:
+                    _a.sent();
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+// does the given token have an ETH pair
+function hasEthPair(token) {
+    return __awaiter(this, void 0, void 0, function () {
+        var uniswapToken, e_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _loop_1 = function (token) {
+                    _a.trys.push([0, 2, , 3]);
+                    uniswapToken = new sdk_1.Token(sdk_1.ChainId.MAINNET, token, 18);
+                    return [4 /*yield*/, sdk_1.Fetcher.fetchPairData(uniswapToken, sdk_1.WETH[uniswapToken.chainId])];
+                case 1:
+                    _a.sent();
+                    return [3 /*break*/, 3];
+                case 2:
+                    e_1 = _a.sent();
+                    return [2 /*return*/, false];
+                case 3: return [2 /*return*/, true];
+            }
+        });
+    });
+}
+// fitler out transactions we don't care about
+function filterTransactions(transactionList) {
+    return __awaiter(this, void 0, void 0, function () {
+        var _loop_1, _i, transactionList_1, transaction;
+        var _this = this;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _loop_1 = function (transaction) {
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0: return [4 /*yield*/, wait(2000)];
+                                case 1:
+                                    _a.sent();
+                                    etherscan.getTransactionByHash(transaction)
+                                        .then(function (data) { return __awaiter(_this, void 0, void 0, function () {
+                                        var receipt;
+                                        return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0: return [4 /*yield*/, etherscan.getTransactionReceipt(transaction)];
+                                                case 1:
+                                                    receipt = _a.sent();
+                                                    console.log(receipt);
+                                                    return [2 /*return*/];
+                                            }
+                                        });
+                                    }); });
+                                    return [2 /*return*/];
+                            }
+                        });
+                    };
+                    _i = 0, transactionList_1 = transactionList;
+                    _a.label = 1;
+                case 1:
+                    if (!(_i < transactionList_1.length)) return [3 /*break*/, 4];
+                    transaction = transactionList_1[_i];
+                    return [5 /*yield**/, _loop_1(transaction)];
+                case 2:
+                    _a.sent();
+                    _a.label = 3;
+                case 3:
+                    _i++;
+                    return [3 /*break*/, 1];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+// fitler out tokens we don't care about
+function filterTokens(tokenList) {
+    return __awaiter(this, void 0, void 0, function () {
+        var _loop_2, _i, tokenList_1, token, state_1;
+        var _this = this;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    // ignore possible errors
+                    if (tokenList.length == 0)
+                        return [2 /*return*/];
+                    _loop_2 = function (token) {
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
                                     // don't list addresses that were recently listed
                                     if (recent.indexOf(token) !== -1)
                                         return [2 /*return*/, { value: void 0 }];
+                                    return [4 /*yield*/, wait(1000)];
+                                case 1:
+                                    _a.sent();
                                     return [4 /*yield*/, ethplorer.getTokenInfo(token)
-                                            .then(function (data) {
-                                            // ignore coins that don't meet filter
-                                            if (data.transfersCount > TRANSFERS_FILTER)
-                                                return;
-                                            // add to list
-                                            cycleArray(token);
-                                            // console.log(recent);
-                                            // construct message
-                                            var message = data.name +
-                                                "```\nTransfers: " + data.transfersCount +
-                                                "\nHolders: " + data.holdersCount +
-                                                "\nTotal Supply" + data.totalSupply +
-                                                "```\nhttps://etherscan.io/token/" + data.address;
-                                            log(message);
-                                        })["catch"](function (err) {
+                                            .then(function (data) { return __awaiter(_this, void 0, void 0, function () {
+                                            var ethPair, supply, message;
+                                            return __generator(this, function (_a) {
+                                                switch (_a.label) {
+                                                    case 0:
+                                                        // ignore coins that don't meet filter
+                                                        if (data.transfersCount > TRANSFERS_FILTER)
+                                                            return [2 /*return*/];
+                                                        return [4 /*yield*/, hasEthPair(token)];
+                                                    case 1:
+                                                        ethPair = _a.sent();
+                                                        // add to list
+                                                        cycleArray(token);
+                                                        supply = Number(parseInt(data.totalSupply) / Math.pow(10, data.decimals))
+                                                            .toLocaleString('en');
+                                                        message = "```" + data.name +
+                                                            "\nTransfers: " + data.transfersCount +
+                                                            "\nHolders: " + data.holdersCount +
+                                                            "\nTotal Supply: " + supply +
+                                                            "\nEth Pair: " + ethPair +
+                                                            "```\nhttps://etherscan.io/token/" + data.address;
+                                                        log(message);
+                                                        return [2 /*return*/];
+                                                }
+                                            });
+                                        }); })["catch"](function (err) {
                                             // log("filterTokens(): " + err);            
                                             return;
                                         })];
-                                case 1:
+                                case 2:
                                     _a.sent();
                                     return [2 /*return*/];
                             }
@@ -145,7 +246,7 @@ function filterTokens(tokenList) {
                 case 1:
                     if (!(_i < tokenList_1.length)) return [3 /*break*/, 4];
                     token = tokenList_1[_i];
-                    return [5 /*yield**/, _loop_1(token)];
+                    return [5 /*yield**/, _loop_2(token)];
                 case 2:
                     state_1 = _a.sent();
                     if (typeof state_1 === "object")
@@ -162,7 +263,7 @@ function filterTokens(tokenList) {
 // scrape etherscan latests transactions page
 function scrapeEtherscan() {
     return __awaiter(this, void 0, void 0, function () {
-        var html, response, err_1, $, newTokens;
+        var html, response, err_1, $, newTokens, newTransactions;
         var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
@@ -184,26 +285,29 @@ function scrapeEtherscan() {
                 case 5:
                     $ = _a.sent();
                     newTokens = [];
+                    newTransactions = [];
                     // go through all table items
                     return [4 /*yield*/, $('.table-hover tbody tr').each(function (i, elem) { return __awaiter(_this, void 0, void 0, function () {
-                            var href, tokenAddress;
+                            var token, transactionAddress, tokenAddress;
                             var _a, _b;
                             return __generator(this, function (_c) {
-                                href = $(elem.childNodes[8].childNodes[0]).attr("href");
-                                tokenAddress = (_a = href) === null || _a === void 0 ? void 0 : _a.substring(((_b = href) === null || _b === void 0 ? void 0 : _b.lastIndexOf("/")) + 1);
-                                // console.log(tokenAddress);
+                                token = $(elem.childNodes[8].childNodes[0]).attr("href");
+                                transactionAddress = $(elem.childNodes[1].childNodes[0]).text();
+                                tokenAddress = (_a = token) === null || _a === void 0 ? void 0 : _a.substring(((_b = token) === null || _b === void 0 ? void 0 : _b.lastIndexOf("/")) + 1);
                                 // add tokens to list
                                 if (tokenAddress)
                                     newTokens.push(tokenAddress);
+                                // add transactions to list
+                                if (transactionAddress)
+                                    newTransactions.push(transactionAddress);
                                 return [2 /*return*/];
                             });
                         }); })];
                 case 6:
                     // go through all table items
                     _a.sent();
-                    // send tokens to filter
-                    if (newTokens.length > 0)
-                        filterTokens(newTokens);
+                    // send tokens & transacitons to filter
+                    filterTokens(newTokens);
                     return [2 /*return*/];
             }
         });

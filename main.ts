@@ -1,11 +1,11 @@
 import Config from './config';
-import Etherscan from 'node-etherscan-api';
 import { Ethplorer } from 'ethplorer-js';
 import { ChainId, Token, Fetcher, WETH, Route } from '@uniswap/sdk';
 import * as cheerio from 'cheerio';
 import * as fs from 'fs';
 const hooman = require('hooman');
 const Discord = require('discord.js');
+const Etherscan = require('node-etherscan-api');
 const discord = new Discord.Client();
 
 // initialize apis
@@ -93,7 +93,7 @@ async function hasEthPair(token: string) {
     try {
         const uniswapToken = new Token(ChainId.MAINNET, token, 18);
         await Fetcher.fetchPairData(uniswapToken, WETH[uniswapToken.chainId])
-    } catch (e: any) {
+    } catch (e) {
         return false;
     }
 
