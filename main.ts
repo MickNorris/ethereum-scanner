@@ -246,6 +246,6 @@ discord.on("ready", () => {
         if (loadCoins())
             scrapeEtherscan();
 
-    }, 20000);
+    }, 30000);
 
 });
